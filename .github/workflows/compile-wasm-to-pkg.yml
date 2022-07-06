@@ -1,0 +1,24 @@
+name: compile-wasm-to-pkg
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  setup:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: install wasm-pack
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+    - name: build wasm to pkg
+      run: wasm-pack build --target web --release
+    - name: commit amend with pkg folder
+      run: git add pkg && git commit --amend --no-edit && git push
