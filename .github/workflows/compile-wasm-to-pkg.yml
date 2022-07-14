@@ -34,3 +34,4 @@ jobs:
         create_branch: true
         file_pattern: 'pkg'
         add_options: '-f'
+        skip_dirty_check: true
