@@ -28,16 +28,13 @@ jobs:
     - name: Add SHORT_SHA env property with commit short sha
       run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
 
-    - name: git test
-      run: git status && git log
 
-
-    # - name: commit pkg to release branch
-    #   uses: stefanzweifel/git-auto-commit-action@v4
-    #   with:
-    #     commit_message: Auto deploy(${{env.SHORT_SHA}})
-    #     branch: release
-    #     add_options: '-f'
-    #     skip_dirty_check: true
-    #     push_options: '--force'
-    #     commit_options: '--no-verify --amend'
+    - name: commit pkg to release branch
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: Auto deploy(${{env.SHORT_SHA}})
+        branch: release
+        add_options: '-f'
+        skip_dirty_check: true
+        push_options: '--force'
+        commit_options: '--no-verify'
