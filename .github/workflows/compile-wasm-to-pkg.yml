@@ -32,5 +32,5 @@ jobs:
         commit_message: Auto deploy($SHORT_SHA)
         branch: release
         create_branch: true
-        file_pattern: pkg
+        file_pattern: 'pkg'
         add_options: '-f'
