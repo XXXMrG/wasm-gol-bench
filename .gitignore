@@ -3,6 +3,7 @@
 Cargo.lock
 bin/
 wasm-pack.log
+/pkg
 
 # Logs
 logs

@@ -16,9 +16,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
     - name: install wasm-pack
       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
     - name: build wasm to pkg
       run: wasm-pack build --target web --release
-    - name: commit amend with pkg folder
-      run: git add pkg && git commit --amend --no-edit && git push
+
+    - name: Add SHORT_SHA env property with commit short sha
+      run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+
+    - name: commit pkg to release branch
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: Auto deploy($SHORT_SHA)
+        branch: release
+        create_branch: true,
+        add_options: '-f'
