@@ -27,7 +27,7 @@ jobs:
       run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
 
     - name: commit pkg to release branch
-    - uses: stefanzweifel/git-auto-commit-action@v4
+      uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: Auto deploy($SHORT_SHA)
         branch: release
