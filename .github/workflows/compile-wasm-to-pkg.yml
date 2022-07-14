@@ -29,7 +29,7 @@ jobs:
     - name: commit pkg to release branch
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: Auto deploy($SHORT_SHA)
+        commit_message: Auto deploy(#${SHORT_SHA})
         branch: release
         create_branch: true
         file_pattern: 'pkg'
