@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# bash file for vercel to skip deploy which do not have pkg folder
+
 echo "VERCEL_ENV: $VERCEL_ENV"
 
 # only build for commit with pkg folder
