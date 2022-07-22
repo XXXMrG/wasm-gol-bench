@@ -2,6 +2,7 @@ import init from 'wasm-game-of-life';
 import wasmPath from '../../pkg/wasm_game_of_life_bg.wasm?url';
 import {useRef, useState, useEffect} from 'preact/hooks';
 import {PlayIcon, PauseIcon} from '@heroicons/react/solid';
+import {useFPS, FPS} from './fps';
 
 import type {InitOutput} from 'wasm-game-of-life';
 
@@ -33,26 +34,27 @@ interface UniverseInfo {
     module: InitOutput;
 }
 
-let animationID: number | null = null;
-let universeInfo: UniverseInfo | null = null;
-
 const Game = () => {
     const canvas = useRef<HTMLCanvasElement>(null);
 
     const [animationStatus, setAnimationStatus] = useState(PlayStatus.play);
+    const animationID = useRef<number | null>(null);
+    const universeInfo = useRef<UniverseInfo | null>(null);
+
+    const [fpsData, measure] = useFPS();
 
     const playHandler = () => {
         if (animationStatus === PlayStatus.play) {
-            animationID && cancelAnimationFrame(animationID);
+            animationID.current && cancelAnimationFrame(animationID.current);
             setAnimationStatus(PlayStatus.pause);
         } else {
             setAnimationStatus(PlayStatus.play);
-            animationID = requestAnimationFrame(renderLoop);
+            animationID.current = requestAnimationFrame(renderLoop);
         }
     };
 
     const drawGrid = () => {
-        const {ctx, width, height} = universeInfo!;
+        const {ctx, width, height} = universeInfo.current!;
         ctx.beginPath();
         ctx.strokeStyle = GRID_COLOR;
 
@@ -72,7 +74,7 @@ const Game = () => {
     };
 
     const drawCells = () => {
-        const {ctx, width, height, module, pointer} = universeInfo!;
+        const {ctx, width, height, module, pointer} = universeInfo.current!;
         const cellsPtr = module.universe_cells(pointer);
         const cells = new Uint8Array(
             module.memory.buffer,
@@ -101,16 +103,17 @@ const Game = () => {
     };
 
     const renderLoop = () => {
-        const {module, pointer} = universeInfo!;
+        measure();
+        const {module, pointer} = universeInfo.current!;
         module.universe_tick(pointer);
         drawCells();
-        animationID = requestAnimationFrame(renderLoop);
+        animationID.current = requestAnimationFrame(renderLoop);
     };
 
     const start = () => {
         drawGrid();
         drawCells();
-        animationID = requestAnimationFrame(renderLoop);
+        animationID.current = requestAnimationFrame(renderLoop);
     };
 
     useEffect(() => {
@@ -125,32 +128,45 @@ const Game = () => {
                 canvasElement.height = (CELL_SIZE + 1) * height + 1;
 
                 const ctx = canvasElement.getContext('2d')!;
-                universeInfo = {ctx, width, height, pointer: universe, module};
+                universeInfo.current = {
+                    ctx,
+                    width,
+                    height,
+                    pointer: universe,
+                    module,
+                };
                 start();
             });
         }
 
         return () => {
-            animationID && cancelAnimationFrame(animationID);
-            animationID = null;
-            universeInfo = null;
+            animationID.current && cancelAnimationFrame(animationID.current);
+            animationID.current = null;
+            universeInfo.current = null;
         };
     }, []);
 
     return (
         <>
-            <div className='flex justify-center flex-col items-center'>
-                <canvas ref={canvas}></canvas>
-                <button
-                    onClick={playHandler}
-                    className="w-10 h-10 bg-indigo-600"
-                >
-                    {animationStatus === PlayStatus.play ? (
-                        <PauseIcon />
-                    ) : (
-                        <PlayIcon />
-                    )}
-                </button>
+            <div className="flex justify-center flex-col items-center">
+                <div className="flex">
+                    <div className="flex justify-center flex-col items-center">
+                        <canvas ref={canvas} className="rounded"></canvas>
+                        <button
+                            onClick={playHandler}
+                            className="bg-indigo-600 rounded text-center w-40 h-10"
+                        >
+                            <div className="flex justify-center">
+                                {animationStatus === PlayStatus.play ? (
+                                    <PauseIcon className="w-10 h-10" />
+                                ) : (
+                                    <PlayIcon className="w-10 h-10" />
+                                )}
+                            </div>
+                        </button>
+                    </div>
+                    <FPS fpsData={fpsData} />
+                </div>
             </div>
         </>
     );
