@@ -1,10 +1,8 @@
-import init from 'wasm-game-of-life';
-import wasmPath from '../../pkg/wasm_game_of_life_bg.wasm?url';
 import {useRef, useState, useEffect} from 'preact/hooks';
 import {PlayIcon, PauseIcon} from '@heroicons/react/solid';
 import {useFPS, FPS} from './fps';
 
-import type {InitOutput} from 'wasm-game-of-life';
+import type {Universe} from '../universe/universe';
 
 const CELL_SIZE = 5; // px
 const GRID_COLOR = '#CCCCCC';
@@ -28,18 +26,17 @@ enum PlayStatus {
 
 interface UniverseInfo {
     ctx: CanvasRenderingContext2D;
-    pointer: number;
     width: number;
     height: number;
-    module: InitOutput;
 }
 
-const Game = () => {
+const Game = (props: {universe: Universe}) => {
     const canvas = useRef<HTMLCanvasElement>(null);
+    const universeInfo = useRef<UniverseInfo | null>(null);
+    const {universe} = props;
 
     const [animationStatus, setAnimationStatus] = useState(PlayStatus.play);
     const animationID = useRef<number | null>(null);
-    const universeInfo = useRef<UniverseInfo | null>(null);
 
     const [fpsData, measure] = useFPS();
 
@@ -74,10 +71,11 @@ const Game = () => {
     };
 
     const drawCells = () => {
-        const {ctx, width, height, module, pointer} = universeInfo.current!;
-        const cellsPtr = module.universe_cells(pointer);
+        const {ctx, width, height} = universeInfo.current!;
+        const cellsPtr = universe.getCells()!;
+        const buffer = universe.getBuffer()!;
         const cells = new Uint8Array(
-            module.memory.buffer,
+            buffer,
             cellsPtr,
             (width * height) / 8
         );
@@ -104,8 +102,7 @@ const Game = () => {
 
     const renderLoop = () => {
         measure();
-        const {module, pointer} = universeInfo.current!;
-        module.universe_tick(pointer);
+        universe.tick();
         drawCells();
         animationID.current = requestAnimationFrame(renderLoop);
     };
@@ -119,22 +116,17 @@ const Game = () => {
     useEffect(() => {
         const canvasElement = canvas.current;
         if (canvasElement) {
-            init(wasmPath).then((module) => {
-                const universe = module.universe_new();
-                const width = module.universe_width(universe);
-                const height = module.universe_height(universe);
-
+            universe.init().then(() => {
+                const width = universe.width!;
+                const height = universe.height!;
                 canvasElement.width = (CELL_SIZE + 1) * width + 1;
                 canvasElement.height = (CELL_SIZE + 1) * height + 1;
-
-                const ctx = canvasElement.getContext('2d')!;
                 universeInfo.current = {
-                    ctx,
                     width,
                     height,
-                    pointer: universe,
-                    module,
+                    ctx: canvasElement.getContext('2d')!
                 };
+
                 start();
             });
         }
