@@ -9,16 +9,6 @@ const GRID_COLOR = '#CCCCCC';
 const DEAD_COLOR = '#FFFFFF';
 const ALIVE_COLOR = '#000000';
 
-const bitIsSet = (n: number, arr: Uint8Array) => {
-    const byte = Math.floor(n / 8);
-    const mask = 1 << n % 8;
-    return (arr[byte] & mask) === mask;
-};
-
-const getIndex = (row: number, column: number, width: number) => {
-    return row * width + column;
-};
-
 enum PlayStatus {
     pause,
     play,
@@ -72,21 +62,12 @@ const Game = (props: {universe: Universe}) => {
 
     const drawCells = () => {
         const {ctx, width, height} = universeInfo.current!;
-        const cellsPtr = universe.getCells()!;
-        const buffer = universe.getBuffer()!;
-        const cells = new Uint8Array(
-            buffer,
-            cellsPtr,
-            (width * height) / 8
-        );
 
         ctx.beginPath();
 
         for (let row = 0; row < height; row++) {
             for (let col = 0; col < width; col++) {
-                const idx = getIndex(row, col, width);
-
-                ctx.fillStyle = bitIsSet(idx, cells) ? ALIVE_COLOR : DEAD_COLOR;
+                ctx.fillStyle = universe.isAlive(row, col) ? ALIVE_COLOR : DEAD_COLOR;
 
                 ctx.fillRect(
                     col * (CELL_SIZE + 1) + 1,

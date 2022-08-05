@@ -128,10 +128,8 @@ impl Universe {
 
 #[wasm_bindgen]
 impl Universe {
-    pub fn new() -> Universe {
+    pub fn new(width: u32, height: u32) -> Universe {
         utils::set_panic_hook();
-        let width = 64;
-        let height = 64;
 
         let size = (width * height) as usize;
         let mut cells = FixedBitSet::with_capacity(size);
